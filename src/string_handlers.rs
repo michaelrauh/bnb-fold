@@ -1,5 +1,5 @@
 
-pub fn suffixes(xs: Vec<String>) -> Vec<Vec<String>> {
+fn suffixes(xs: Vec<String>) -> Vec<Vec<String>> {
     let mut acc = vec![];
     for i in 0..xs.len() {
         let sliced: Vec<String> = xs[i..].to_vec();
@@ -8,14 +8,27 @@ pub fn suffixes(xs: Vec<String>) -> Vec<Vec<String>> {
     acc
 }
 
-pub fn split_sentence(sentence: String) -> Vec<String> {
+fn prefixes(xs: Vec<String>) -> Vec<Vec<String>> {
+    let mut acc = vec![];
+    for i in 1..xs.len() + 1 {
+        let sliced: Vec<String> = xs[..i].to_vec();
+        acc.push(sliced);
+    }
+    acc
+}
+
+fn phrases(xs: Vec<String>) -> Vec<Vec<String>> {
+    prefixes(xs).iter().map(|x| suffixes(x.to_vec())).flatten().collect()
+}
+
+fn split_sentence(sentence: String) -> Vec<String> {
     sentence
         .split_ascii_whitespace()
         .map(|x| x.to_string())
         .collect()
 }
 
-pub fn split_corpus(x: String) -> Vec<String> {
+fn split_corpus(x: String) -> Vec<String> {
     x.split_terminator(&['.', '!', '?', ';'])
         .filter(|x| !x.is_empty())
         .map(|x| x.trim())
@@ -38,7 +51,7 @@ pub fn split_corpus(x: String) -> Vec<String> {
 mod tests {
     use std::vec;
 
-    use crate::string_handlers::{split_corpus, split_sentence};
+    use crate::string_handlers::{split_corpus, split_sentence, prefixes, phrases};
 
     use super::suffixes;
 
@@ -62,6 +75,39 @@ mod tests {
                 vec!["c".to_string(), "d".to_string()],
                 vec!["d".to_string()]
             ]
+        )
+    }
+
+    #[test]
+    fn it_calculates_prefixes() {
+        assert_eq!(
+            prefixes(vec![
+                "a".to_string(),
+                "b".to_string(),
+                "c".to_string(),
+                "d".to_string()
+            ]),
+            vec![
+                vec![
+                    "a".to_string(),
+                ],
+                vec!["a".to_string(), "b".to_string()],
+                vec!["a".to_string(), "b".to_string(), "c".to_string()],
+                vec!["a".to_string(), "b".to_string(), "c".to_string(), "d".to_string()]
+            ]
+        )
+    }
+
+    #[test]
+    fn it_calculates_phrases() {
+        assert_eq!(
+            phrases(vec![
+                "a".to_string(),
+                "b".to_string(),
+                "c".to_string(),
+                "d".to_string()
+            ]),
+            [vec!["a"], vec!["a", "b"], vec!["b"], vec!["a", "b", "c"], vec!["b", "c"], vec!["c"], vec!["a", "b", "c", "d"], vec!["b", "c", "d"], vec!["c", "d"], vec!["d"]]
         )
     }
 
