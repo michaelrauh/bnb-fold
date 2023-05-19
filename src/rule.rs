@@ -1,15 +1,15 @@
-use std::{cmp::Ordering, collections::HashMap, thread::current};
+use std::{cmp::Ordering, collections::HashMap};
 
 use itertools::Itertools;
 
 pub fn make_blank(dims: &Vec<usize>) -> Vec<Option<String>> {
-    let size = dims.iter().fold(1, |acc, cur| { acc * cur });
+    let size = dims.iter().fold(1, |acc, cur| acc * cur);
     let mut vec = Vec::with_capacity(size);
     vec.resize(size, None);
     vec
 }
 
-pub fn full(answer: Vec<Option<String>>) -> bool {
+pub fn full(answer: &Vec<Option<String>>) -> bool {
     answer.iter().all(|x| x.is_some())
 }
 
@@ -22,10 +22,18 @@ fn index_to_location_mapping(dims: &Vec<usize>) -> HashMap<usize, Vec<usize>> {
 }
 
 fn location_to_index_mapping(dims: &Vec<usize>) -> HashMap<Vec<usize>, usize> {
-    indices_in_order(&dims).into_iter().enumerate().map(|(x, y)| { (y, x)}).collect()
+    indices_in_order(&dims)
+        .into_iter()
+        .enumerate()
+        .map(|(x, y)| (y, x))
+        .collect()
 }
 
-fn impacted_locations(location: usize, location_to_index: &HashMap<usize, Vec<usize>>, index_to_location: &HashMap<Vec<usize>, usize>) -> Vec<Vec<usize>> {
+fn impacted_locations(
+    location: usize,
+    location_to_index: &HashMap<usize, Vec<usize>>,
+    index_to_location: &HashMap<Vec<usize>, usize>,
+) -> Vec<Vec<usize>> {
     let mut res = vec![];
     let index = &location_to_index[&location];
 
@@ -46,33 +54,40 @@ fn impacted_locations(location: usize, location_to_index: &HashMap<usize, Vec<us
     res
 }
 
-pub fn get_impacted_phrase_locations(dims: Vec<usize>) -> Vec<Vec<Vec<usize>>> {
+pub fn get_impacted_phrase_locations(dims: &Vec<usize>) -> Vec<Vec<Vec<usize>>> {
     let location_to_index = location_to_index_mapping(&dims);
     let index_to_location = index_to_location_mapping(&dims);
     let blank = make_blank(&dims);
 
-    (0..blank.len()).map(|location| impacted_locations(location, &index_to_location, &location_to_index)).collect()
+    (0..blank.len())
+        .map(|location| impacted_locations(location, &index_to_location, &location_to_index))
+        .collect()
 }
 
-pub fn next_open_position(answer: Vec<Option<String>>) -> usize {
+pub fn next_open_position(answer: &Vec<Option<String>>) -> usize {
     answer.iter().position(|x| x.is_none()).unwrap()
 }
 
-pub fn get_diagonals(dims: Vec<usize>) -> Vec<Vec<usize>> {
+pub fn get_diagonals(dims: &Vec<usize>) -> Vec<Vec<usize>> {
     let location_to_index = location_to_index_mapping(&dims);
     let index_to_location = index_to_location_mapping(&dims);
     let blank = make_blank(&dims);
     let indices = indices_in_order(&dims);
 
-    (0..blank.len()).map(|location| {
-        let current_index = &index_to_location[&location];
-        let current_distance: usize = current_index.iter().sum();
-        indices.iter().filter(|index| { 
-            index.to_owned() != current_index && index.iter().sum::<usize>() == current_distance
-        }).map(|x|{
-            location_to_index[x]
-        }).collect_vec()
-    }).collect_vec()
+    (0..blank.len())
+        .map(|location| {
+            let current_index = &index_to_location[&location];
+            let current_distance: usize = current_index.iter().sum();
+            indices
+                .iter()
+                .filter(|index| {
+                    index.to_owned() < current_index
+                        && index.iter().sum::<usize>() == current_distance
+                })
+                .map(|x| location_to_index[x])
+                .collect_vec()
+        })
+        .collect_vec()
 }
 
 fn index_array(dims: &Vec<usize>) -> Vec<Vec<usize>> {
@@ -135,7 +150,7 @@ pub fn cartesian_product<T: Clone>(lists: Vec<Vec<T>>) -> Vec<Vec<T>> {
 
 #[cfg(test)]
 mod tests {
-    use crate::rule::{order_by_distance, get_impacted_phrase_locations, get_diagonals};
+    use crate::rule::{get_diagonals, get_impacted_phrase_locations, order_by_distance};
 
     use super::index_array;
 
@@ -200,11 +215,32 @@ mod tests {
 
     #[test]
     fn it_gets_impacted_phrase_locations() {
-        assert_eq!(get_impacted_phrase_locations(vec![2, 2]), vec![vec![vec![], vec![]], vec![vec![], vec![0]], vec![vec![0], vec![]], vec![vec![1], vec![2]]])
+        assert_eq!(
+            get_impacted_phrase_locations(&vec![2, 2]),
+            vec![
+                vec![vec![], vec![]],
+                vec![vec![], vec![0]],
+                vec![vec![0], vec![]],
+                vec![vec![1], vec![2]]
+            ]
+        )
     }
 
     #[test]
     fn it_gets_impacted_diagonals() {
-        assert_eq!(get_diagonals(vec![3, 3]), vec![vec![], vec![2], vec![1], vec![4, 5], vec![3, 5], vec![3, 4], vec![7], vec![6], vec![]])
+        assert_eq!(
+            get_diagonals(&vec![3, 3]),
+            vec![
+                vec![],
+                vec![],
+                vec![1],
+                vec![],
+                vec![3],
+                vec![3, 4],
+                vec![],
+                vec![6],
+                vec![]
+            ]
+        )
     }
 }

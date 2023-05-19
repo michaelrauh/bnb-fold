@@ -1,6 +1,7 @@
 pub mod rule;
+mod solve;
 pub mod string_handlers;
 
 fn main() {
-    println!("Hello, world!");
+    solve::solve_for_dims(vec![2, 2])
 }
