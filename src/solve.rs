@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, fs::read_to_string};
 
 use crate::{
     rule::{full, get_diagonals, get_impacted_phrase_locations, make_blank, next_open_position},
@@ -6,7 +6,8 @@ use crate::{
 };
 
 pub fn solve_for_dims(dims: Vec<usize>) {
-    let corpus = "a b c d a c b d".to_string();
+    // let corpus = "a b c d a c b d".to_string();
+    let corpus = read_to_string("example.txt").unwrap();
     let vocab = string_handlers::vocabulary(&corpus);
     let phrases = string_handlers::corpus_to_set(&corpus);
     let initial = make_blank(&dims);
