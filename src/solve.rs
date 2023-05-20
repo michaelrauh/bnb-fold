@@ -18,15 +18,14 @@ pub fn solve_for_dims(dims: Vec<usize>) {
 
     println!("Vocab size: {}", vocab.len());
 
-    let mut figure = Figure::new(100)
+    let mut figure = Figure::new(10000)
         .xlabel("Time (s)")
         .ylabel("Amplitude")
         .plot_type(PlotType::Line)
         .color(0x80, 0x00, 0x80);
-    let mut v = vec![];
 
     let mut i = 0;
-    v.push(0 as f32);
+
     Figure::display(&mut figure, |fig| {
         let res = fun_name(
             &mut stack,
@@ -39,13 +38,24 @@ pub fn solve_for_dims(dims: Vec<usize>) {
 
         i += 1;
 
-        if i % 10 == 0 {
-            v.push(res.depth as f32);
+        if i % 100 == 0 {
+                let next_index = next_open_position(&stack.last().unwrap());
+                let total_index: usize = stack.iter().map(|x| next_open_position(x)).sum();
+                let average_index: f32 = (total_index as f32) / (stack.len() as f32);
+                println!("iteration: {}", i);
+                println!("next position: {}", next_index);
+                println!("stack depth: {}", stack.len());
+                println!("filled amount: {}", average_index);
+                println!("");
+            
+
+
+            fig.plot_stream(&vec![res.depth as f32]);
         }
         
-        println!("{}", res.depth);
-
-        fig.plot_stream(&v);
+        if res.done {
+            panic!("not sure how else to end this")
+        }
     });
 }
 
