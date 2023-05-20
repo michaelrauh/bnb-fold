@@ -46,7 +46,7 @@ pub fn solve_for_dims(dims: Vec<usize>) {
             }
 
             for phrase in impacted_phrases {
-                let mut current_real_phrase: Vec<String> = vec![]; // don't rebuild phrase for each word. Only add the missing to the end
+                let mut current_real_phrase: Vec<String> = vec![];
                 for word in phrase {
                     let thing = current_answer[*word].as_ref().unwrap();
                     current_real_phrase.push(thing.to_string());
