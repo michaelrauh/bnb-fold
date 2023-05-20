@@ -38,7 +38,5 @@ fn test_make_set(c: &mut Criterion) {
     c.bench_function("test_make_set", |b| b.iter(|| corpus_to_set(&corpus)));
 }
 
-
-
 criterion_group!(benches, test_blank, test_full, test_impacted, test_next_open, test_diagonals, test_vocabulary, test_make_set);
 criterion_main!(benches);
