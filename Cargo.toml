@@ -7,7 +7,14 @@ edition = "2021"
 [dependencies]
 itertools = "0.10.5"
 maplit = "1.0.2"
+piston_window = "0.120.0"
+plotters = "0.3.4"
+plotters-piston = "0.3.0"
+rand = "0.8.5"
+rand_distr = "0.4.3"
+rtplot = "0.2.0"
 rustc-hash = "1.1.0"
+systemstat = "0.1.5"
 
 [dev-dependencies]
 criterion = { version = "0.4", features = ["html_reports"] }
