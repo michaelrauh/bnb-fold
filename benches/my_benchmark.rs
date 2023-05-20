@@ -8,7 +8,9 @@ use bnb_fold::{
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 fn full_benchmark(c: &mut Criterion) {
-    c.bench_function("full_benchmark", |b| b.iter(|| solve_for_dims(black_box(vec![2, 2]))));
+    c.bench_function("full_benchmark", |b| {
+        b.iter(|| solve_for_dims(black_box(vec![2, 2])))
+    });
 }
 
 fn test_blank(c: &mut Criterion) {
@@ -63,8 +65,5 @@ fn test_make_set(c: &mut Criterion) {
     c.bench_function("test_make_set", |b| b.iter(|| corpus_to_set(&corpus, 100)));
 }
 
-criterion_group!(
-    benches,
-    full_benchmark
-);
+criterion_group!(benches, full_benchmark);
 criterion_main!(benches);
