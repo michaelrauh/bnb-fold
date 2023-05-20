@@ -9,7 +9,7 @@ pub fn solve_for_dims(dims: Vec<usize>) {
     // let corpus = "a b c d a c b d".to_string();
     let corpus = read_to_string("example.txt").unwrap();
     let vocab = string_handlers::vocabulary(&corpus);
-    let phrases = string_handlers::corpus_to_set(&corpus);
+    let phrases = string_handlers::corpus_to_set(&corpus, *dims.iter().max().unwrap());
     let initial = make_blank(&dims);
     let mut stack = vec![initial];
     let impacted_phrase_locations = get_impacted_phrase_locations(&dims);

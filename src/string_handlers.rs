@@ -42,14 +42,16 @@ fn split_sentence(sentence: String) -> Vec<String> {
         .collect()
 }
 
-pub fn corpus_to_set(corpus: &String) -> HashSet<Vec<String>> {
+pub fn corpus_to_set(corpus: &String, max_length: usize) -> HashSet<Vec<String>> {
     let mut s = HashSet::default();
 
     for sentence in split_corpus(&corpus) {
         let sentence_vec = split_sentence(sentence);
         let phrases = phrases(sentence_vec);
         for phrase in phrases {
-            s.insert(phrase);
+            if phrase.len() <= max_length {
+                s.insert(phrase);
+            }
         }
     }
     s
@@ -185,7 +187,7 @@ mod tests {
     #[test]
     fn it_converts_a_corpus_to_a_set_of_phrases() {
         assert_eq!(
-            corpus_to_set(&"a b c d".to_string()),
+            corpus_to_set(&"a b c d".to_string(), 100),
             hashset![
                 vec!["a".to_string()],
                 vec!["a".to_string(), "b".to_string()],
