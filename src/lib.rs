@@ -1,5 +1,5 @@
 pub mod rule;
-mod solve;
+pub mod solve;
 pub mod string_handlers;
 
 fn main() {
