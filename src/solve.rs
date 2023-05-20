@@ -14,8 +14,20 @@ pub fn solve_for_dims(dims: Vec<usize>) {
     let mut stack = vec![initial];
     let impacted_phrase_locations = get_impacted_phrase_locations(&dims);
     let impacted_diagonals = get_diagonals(&dims);
+    let mut i = 0;
 
     loop {
+        if i % 1000 == 0 {
+            let next_index = next_open_position(&stack.last().unwrap());
+            println!("iteration: {}", i);
+            println!("next position: {}", next_index);
+            println!("stack depth: {}", stack.len());
+            // println!("current item: {:?}", stack.last());
+            println!("");
+        }
+
+        i += 1;
+
         let cur = stack.pop();
         if cur.is_none() {
             println!("no results");
