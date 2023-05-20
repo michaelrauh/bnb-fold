@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use rustc_hash::FxHashSet;
 use std::collections::HashSet;
 
 fn suffixes(xs: Vec<String>) -> Vec<Vec<String>> {
@@ -42,8 +43,9 @@ fn split_sentence(sentence: String) -> Vec<String> {
         .collect()
 }
 
-pub fn corpus_to_set(corpus: &String, max_length: usize) -> HashSet<Vec<String>> {
-    let mut s = HashSet::default();
+pub fn corpus_to_set(corpus: &String, max_length: usize) -> FxHashSet<Vec<String>> {
+    let mut s = FxHashSet::default();
+    s.reserve(1000000);
 
     for sentence in split_corpus(&corpus) {
         let sentence_vec = split_sentence(sentence);
@@ -81,6 +83,7 @@ mod tests {
     use std::vec;
 
     use maplit::hashset;
+    use rustc_hash::FxHashSet;
 
     use crate::string_handlers::{
         corpus_to_set, phrases, prefixes, split_corpus, split_sentence, vocabulary,
@@ -186,26 +189,23 @@ mod tests {
 
     #[test]
     fn it_converts_a_corpus_to_a_set_of_phrases() {
-        assert_eq!(
-            corpus_to_set(&"a b c d".to_string(), 100),
-            hashset![
-                vec!["a".to_string()],
-                vec!["a".to_string(), "b".to_string()],
-                vec!["b".to_string()],
-                vec!["a".to_string(), "b".to_string(), "c".to_string()],
-                vec!["b".to_string(), "c".to_string()],
-                vec!["c".to_string()],
-                vec![
-                    "a".to_string(),
-                    "b".to_string(),
-                    "c".to_string(),
-                    "d".to_string()
-                ],
-                vec!["b".to_string(), "c".to_string(), "d".to_string()],
-                vec!["c".to_string(), "d".to_string()],
-                vec!["d".to_string()]
-            ]
-        );
+        let mut expected_set = FxHashSet::default();
+        expected_set.insert(vec!["a".to_string()]);
+        expected_set.insert(vec!["a".to_string(), "b".to_string()]);
+        expected_set.insert(vec!["b".to_string()]);
+        expected_set.insert(vec!["a".to_string(), "b".to_string(), "c".to_string()]);
+        expected_set.insert(vec!["b".to_string(), "c".to_string()]);
+        expected_set.insert(vec!["c".to_string()]);
+        expected_set.insert(vec![
+            "a".to_string(),
+            "b".to_string(),
+            "c".to_string(),
+            "d".to_string(),
+        ]);
+        expected_set.insert(vec!["b".to_string(), "c".to_string(), "d".to_string()]);
+        expected_set.insert(vec!["c".to_string(), "d".to_string()]);
+        expected_set.insert(vec!["d".to_string()]);
+        assert_eq!(corpus_to_set(&"a b c d".to_string(), 100), expected_set);
     }
 
     #[test]

@@ -38,32 +38,35 @@ pub fn solve_for_dims(dims: Vec<usize>) {
             .cloned()
             .collect();
 
-        fun_name(&vocab, forbidden_words, impacted_phrases, current_answer, &phrases, next_index, &mut stack);
+        {
+            let vocab = &vocab;
+            let phrases = &phrases;
+            let stack: &mut Vec<Vec<Option<String>>> = &mut stack;
+            'outer: for new_word in vocab {
+                for forbidden_word in &forbidden_words {
+                    if new_word == forbidden_word {
+                        continue 'outer;
+                    }
+                }
+
+                for phrase in impacted_phrases {
+                    let mut current_real_phrase: Vec<String> = vec![];
+                    for word in phrase {
+                        let thing = current_answer[*word].as_ref().unwrap();
+                        current_real_phrase.push(thing.to_string());
+                    }
+                    current_real_phrase.push(new_word.to_string());
+                    if !phrases.contains(&current_real_phrase) {
+                        continue 'outer;
+                    }
+                }
+
+                let mut res = current_answer.clone();
+                res[next_index] = Some(new_word.to_string());
+                stack.push(res);
+            }
+        };
     }
 }
 
-fn fun_name(vocab: &Vec<String>, forbidden_words: HashSet<String>, impacted_phrases: &Vec<Vec<usize>>, current_answer: Vec<Option<String>>, phrases: &HashSet<Vec<String>>, next_index: usize, stack: &mut Vec<Vec<Option<String>>>) {
-    'outer: for new_word in vocab {
-        for forbidden_word in &forbidden_words {
-            if new_word == forbidden_word {
-                continue 'outer;
-            }
-        }
 
-        for phrase in impacted_phrases {
-            let mut current_real_phrase: Vec<String> = vec![];
-            for word in phrase {
-                let thing = current_answer[*word].as_ref().unwrap();
-                current_real_phrase.push(thing.to_string());
-            }
-            current_real_phrase.push(new_word.to_string());
-            if !phrases.contains(&current_real_phrase) {
-                continue 'outer;
-            }
-        }
-
-        let mut res = current_answer.clone();
-        res[next_index] = Some(new_word.to_string());
-        stack.push(res);
-    }
-}
