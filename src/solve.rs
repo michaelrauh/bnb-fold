@@ -15,14 +15,31 @@ pub fn solve_for_dims(dims: Vec<usize>) {
     let impacted_phrase_locations = get_impacted_phrase_locations(&dims);
     let impacted_diagonals = get_diagonals(&dims);
     let mut i = 0;
+    let mut max_index = 0;
 
     loop {
         if i % 1000 == 0 {
             let next_index = next_open_position(&stack.last().unwrap());
+            let first_at_default = stack.iter().position(|x| next_open_position(x) > 1).unwrap_or_default();
+            let touched = stack.len() - first_at_default;
+            let index = stack.len() - (touched+1);
+            let last_n = stack.get(index..).unwrap_or_default();
+            let total_index: usize = last_n.iter().map(|x| next_open_position(x)).sum();
+            let average_index: f32 = (total_index as f32) / (last_n.len() as f32);
+            let percent = (first_at_default as f32) / (vocab.len() as f32);
+
+
+            println!("vocab size: {}", vocab.len());
             println!("iteration: {}", i);
+            println!("best attempt: {}", max_index);
             println!("next position: {}", next_index);
             println!("stack depth: {}", stack.len());
-            // println!("current item: {:?}", stack.last());
+            println!("average progress of those touched: {}", average_index);
+            println!("untouched tree size: {}", first_at_default);
+            println!("touched tree size: {}", touched);
+            println!("example: {:?}", stack.last().unwrap());
+            println!("percent: {:?}", percent);
+            
             println!("");
         }
 
@@ -42,6 +59,10 @@ pub fn solve_for_dims(dims: Vec<usize>) {
         }
 
         let next_index = next_open_position(&current_answer);
+
+        if next_index > max_index {
+            max_index = next_index;
+        }
         let impacted_phrases = &impacted_phrase_locations[next_index];
         let impacted_diagonal = &impacted_diagonals[next_index];
         let forbidden_words: HashSet<String> = impacted_diagonal
