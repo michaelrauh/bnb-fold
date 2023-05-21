@@ -2,6 +2,7 @@ use crate::{
     rule::{full, get_diagonals, get_impacted_phrase_locations, make_blank, next_open_position},
     string_handlers,
 };
+use itertools::Itertools;
 use rand_distr::{Distribution, Normal};
 use rtplot::{Figure, PlotType};
 use std::{collections::HashSet, fs::read_to_string, ops::ControlFlow};
@@ -16,11 +17,11 @@ pub fn solve_for_dims(dims: Vec<usize>) {
     let impacted_phrase_locations = get_impacted_phrase_locations(&dims);
     let impacted_diagonals = get_diagonals(&dims);
 
-    println!("Vocab size: {}", vocab.len());
+    let mut max_index = 0;
 
     let mut figure = Figure::new(10000)
-        .xlabel("Time (s)")
-        .ylabel("Amplitude")
+        .xlabel("Iterations")
+        .ylabel("Percent of Tree Unexplored")
         .plot_type(PlotType::Line)
         .color(0x80, 0x00, 0x80);
 
@@ -34,23 +35,38 @@ pub fn solve_for_dims(dims: Vec<usize>) {
             &vocab,
             max_length,
             &phrases,
+            &mut max_index
         );
 
         i += 1;
 
-        if i % 100 == 0 {
+        if i % 1000 == 0 {
                 let next_index = next_open_position(&stack.last().unwrap());
-                let total_index: usize = stack.iter().map(|x| next_open_position(x)).sum();
-                let average_index: f32 = (total_index as f32) / (stack.len() as f32);
+                let first_at_default = stack.iter().position(|x| next_open_position(x) > 1).unwrap_or_default();
+                let touched = stack.len() - first_at_default;
+                let index = stack.len() - (touched+1);
+                let last_n = stack.get(index..).unwrap_or_default();
+                let total_index: usize = last_n.iter().map(|x| next_open_position(x)).sum();
+                let average_index: f32 = (total_index as f32) / (last_n.len() as f32);
+                let percent = (first_at_default as f32) / (vocab.len() as f32);
+
+
+                println!("vocab size: {}", vocab.len());
                 println!("iteration: {}", i);
+                println!("best attempt: {}", max_index);
                 println!("next position: {}", next_index);
                 println!("stack depth: {}", stack.len());
-                println!("filled amount: {}", average_index);
+                println!("average progress of those touched: {}", average_index);
+                println!("untouched tree size: {}", first_at_default);
+                println!("touched tree size: {}", touched);
+                println!("example: {:?}", stack.last().unwrap());
+                
                 println!("");
+                
             
 
 
-            fig.plot_stream(&vec![res.depth as f32]);
+            fig.plot_stream(&vec![percent]);
         }
         
         if res.done {
@@ -71,6 +87,7 @@ fn fun_name(
     vocab: &Vec<String>,
     max_length: usize,
     phrases: &HashSet<Vec<String>, std::hash::BuildHasherDefault<rustc_hash::FxHasher>>,
+    max_index: &mut usize,
 ) -> Status {
     let cur = stack.pop();
     if cur.is_none() {
@@ -90,6 +107,10 @@ fn fun_name(
         };
     }
     let next_index = next_open_position(&current_answer);
+
+    if next_index > *max_index {
+        *max_index = next_index;
+    }
     let impacted_phrases = &*impacted_phrase_locations[next_index];
     let impacted_diagonal = &*impacted_diagonals[next_index];
     let forbidden_words: HashSet<String> = impacted_diagonal
