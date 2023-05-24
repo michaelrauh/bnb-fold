@@ -2,14 +2,14 @@ use std::{cmp::Ordering, collections::HashMap};
 
 use itertools::Itertools;
 
-pub fn make_blank(dims: &Vec<usize>) -> Vec<Option<String>> {
+pub fn make_blank(dims: &Vec<usize>) -> Vec<Option<u32>> {
     let size = dims.iter().fold(1, |acc, cur| acc * cur);
     let mut vec = Vec::with_capacity(size);
     vec.resize(size, None);
     vec
 }
 
-pub fn full(answer: &Vec<Option<String>>) -> bool {
+pub fn full(answer: &Vec<Option<u32>>) -> bool {
     answer.iter().all(|x| x.is_some())
 }
 
@@ -64,7 +64,7 @@ pub fn get_impacted_phrase_locations(dims: &Vec<usize>) -> Vec<Vec<Vec<usize>>> 
         .collect()
 }
 
-pub fn next_open_position(answer: &Vec<Option<String>>) -> usize {
+pub fn next_open_position(answer: &Vec<Option<u32>>) -> usize {
     answer.iter().position(|x| x.is_none()).unwrap()
 }
 
@@ -150,7 +150,7 @@ fn cartesian_product<T: Clone>(lists: Vec<Vec<T>>) -> Vec<Vec<T>> {
 
 #[cfg(test)]
 mod tests {
-    use crate::rule::{get_diagonals, get_impacted_phrase_locations, order_by_distance};
+    use crate::rule::{get_diagonals, get_impacted_phrase_locations, order_by_distance, indices_in_order};
 
     use super::index_array;
 
@@ -199,6 +199,24 @@ mod tests {
                 vec![2, 1],
                 vec![2, 2]
             ]),
+            vec![
+                vec![0, 0],
+                vec![0, 1],
+                vec![1, 0],
+                vec![0, 2],
+                vec![1, 1],
+                vec![2, 0],
+                vec![1, 2],
+                vec![2, 1],
+                vec![2, 2]
+            ]
+        );
+    }
+
+    #[test]
+    fn temp() {
+        assert_eq!(
+            indices_in_order(&vec![4, 3]),
             vec![
                 vec![0, 0],
                 vec![0, 1],
