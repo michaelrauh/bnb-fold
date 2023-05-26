@@ -1,6 +1,5 @@
 use std::{collections::HashSet, fs::read_to_string, hash::Hasher, iter::zip};
 
-
 use itertools::Itertools;
 use rustc_hash::FxHasher;
 
@@ -24,6 +23,7 @@ fn decode(coded: &Vec<Option<u32>>, codec: &Codec) -> Vec<String> {
 pub fn solve_for_dims(dims: Vec<usize>) {
     let max_length = *dims.iter().max().unwrap();
     let corpus = read_to_string("example.txt").unwrap();
+    // let corpus = "a b. c d. a c. b d.".to_string();
     let codec = string_handlers::make_codec(&corpus);
     let vocab: Vec<&u32> = codec.coder.values().sorted().collect();
     let phrases = string_handlers::corpus_to_set(&corpus, max_length, &codec);
@@ -37,11 +37,13 @@ pub fn solve_for_dims(dims: Vec<usize>) {
 
     loop {
         if i % 1000 == 0 {
-            let first_at_default = stack.iter().position(|x| next_open_position(x) > 1).unwrap_or_default();
+            let first_at_default = stack
+                .iter()
+                .position(|x| next_open_position(x) > 1)
+                .unwrap_or_default();
             let touched = stack.len() - first_at_default;
             let percent = (first_at_default as f32) / (vocab.len() as f32);
             let example = decode(stack.last().unwrap(), &codec);
-
 
             let mut overlap = 0;
             for (cur, prev) in zip(&example, &previous_example) {
@@ -93,28 +95,26 @@ pub fn solve_for_dims(dims: Vec<usize>) {
             .cloned()
             .collect();
 
-        'outer: for new_word in &vocab {
-            for forbidden_word in &forbidden_words {
-                if new_word == &forbidden_word {
-                    continue 'outer;
+        let working_words = vocab
+            .iter()
+            .filter(|v| !forbidden_words.contains(v))
+            .filter(|v| {
+                for ip in impacted_phrases {
+                    let mut h = FxHasher::default();
+                    for word in ip {
+                        let thing = current_answer[*word].as_ref().unwrap();
+                        h.write_u32(*thing);
+                    }
+                    h.write_u32(***v);
+                    let f = h.finish();
+                    if !phrases.contains(&f) {
+                        return false;
+                    }
                 }
-            }
-
-            for phrase in impacted_phrases {
-                let mut h = FxHasher::default();
-                
-                for word in phrase {
-                    let thing = current_answer[*word].as_ref().unwrap();
-                    h.write_u32(*thing);
-                }
-
-                h.write_u32(**new_word);
-                let f = h.finish();
-                if !phrases.contains(&f) {
-                    continue 'outer;
-                }
-            }
-
+                true
+            })
+            .collect_vec();
+        for new_word in working_words {
             let mut res = current_answer.clone();
             res[next_index] = Some(**new_word);
             stack.push(res);

@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use nohash_hasher::IntSet;
-use rustc_hash::{FxHasher};
-use std::{collections::{HashMap}, hash::Hasher};
+use rustc_hash::FxHasher;
+use std::{collections::HashMap, hash::Hasher};
 
 fn suffixes(xs: Vec<String>) -> Vec<Vec<String>> {
     let mut acc = vec![];
@@ -14,7 +14,7 @@ fn suffixes(xs: Vec<String>) -> Vec<Vec<String>> {
 
 pub struct Codec {
     pub coder: HashMap<String, u32>,
-    pub decoder: HashMap<u32, String>
+    pub decoder: HashMap<u32, String>,
 }
 
 pub fn make_codec(corpus: &String) -> Codec {
@@ -23,11 +23,19 @@ pub fn make_codec(corpus: &String) -> Codec {
         .flat_map(|x| split_sentence(x))
         .unique()
         .collect();
-    let coder: HashMap<String, u32> = vocab.iter().enumerate().map(|(id,word)| {
-        (word.to_string(), id as u32)
-    }).collect();
-    let decoder = coder.iter().map(|(k, v)| (v.to_owned(), k.to_owned())).collect();
-    Codec { coder: coder, decoder: decoder }
+    let coder: HashMap<String, u32> = vocab
+        .iter()
+        .enumerate()
+        .map(|(id, word)| (word.to_string(), id as u32))
+        .collect();
+    let decoder = coder
+        .iter()
+        .map(|(k, v)| (v.to_owned(), k.to_owned()))
+        .collect();
+    Codec {
+        coder: coder,
+        decoder: decoder,
+    }
 }
 
 fn prefixes(xs: Vec<String>) -> Vec<Vec<String>> {
@@ -99,9 +107,7 @@ mod tests {
 
     use rustc_hash::FxHashSet;
 
-    use crate::string_handlers::{
-        phrases, prefixes, split_corpus, split_sentence
-    };
+    use crate::string_handlers::{phrases, prefixes, split_corpus, split_sentence};
 
     use super::suffixes;
 

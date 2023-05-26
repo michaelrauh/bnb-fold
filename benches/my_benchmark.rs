@@ -2,14 +2,14 @@ use std::fs::read_to_string;
 
 use bnb_fold::{
     rule::{get_diagonals, get_impacted_phrase_locations, make_blank},
-    solve::{solve_for_dims},
-    string_handlers::{make_codec},
+    solve::solve_for_dims,
+    string_handlers::make_codec,
 };
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 fn full_benchmark(c: &mut Criterion) {
     c.bench_function("full_benchmark", |b| {
-        b.iter(|| solve_for_dims(black_box(vec![3, 2])))
+        b.iter(|| solve_for_dims(black_box(vec![2, 2])))
     });
 }
 
