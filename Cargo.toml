@@ -8,6 +8,7 @@ edition = "2021"
 itertools = "0.10.5"
 maplit = "1.0.2"
 nohash-hasher = "0.2.0"
+rayon = "1.7.0"
 rustc-hash = "1.1.0"
 string-interner = "0.14.0"
 

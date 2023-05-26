@@ -1,6 +1,7 @@
 use std::{collections::HashSet, fs::read_to_string, hash::Hasher, iter::zip};
 
 use itertools::Itertools;
+use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use rustc_hash::FxHasher;
 
 use crate::{
@@ -95,8 +96,8 @@ pub fn solve_for_dims(dims: Vec<usize>) {
             .cloned()
             .collect();
 
-        let working_words = vocab
-            .iter()
+        let working_words: Vec<&&u32> = vocab
+            .par_iter()
             .filter(|v| !forbidden_words.contains(v))
             .filter(|v| {
                 for ip in impacted_phrases {
@@ -113,7 +114,7 @@ pub fn solve_for_dims(dims: Vec<usize>) {
                 }
                 true
             })
-            .collect_vec();
+            .collect();
         for new_word in working_words {
             let mut res = current_answer.clone();
             res[next_index] = Some(**new_word);

@@ -50,6 +50,7 @@ dependencies = [
  "itertools",
  "maplit",
  "nohash-hasher",
+ "rayon",
  "rustc-hash",
  "string-interner",
 ]
