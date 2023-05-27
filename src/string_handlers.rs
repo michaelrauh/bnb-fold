@@ -17,10 +17,10 @@ pub struct Codec {
     pub decoder: HashMap<u32, String>,
 }
 
-pub fn make_codec(corpus: &String) -> Codec {
+pub fn make_codec(corpus: &str) -> Codec {
     let vocab: Vec<String> = split_corpus(corpus)
         .into_iter()
-        .flat_map(|x| split_sentence(x))
+        .flat_map(split_sentence)
         .unique()
         .collect();
     let coder: HashMap<String, u32> = vocab
@@ -33,8 +33,8 @@ pub fn make_codec(corpus: &String) -> Codec {
         .map(|(k, v)| (v.to_owned(), k.to_owned()))
         .collect();
     Codec {
-        coder: coder,
-        decoder: decoder,
+        coder,
+        decoder,
     }
 }
 
@@ -50,8 +50,7 @@ fn prefixes(xs: Vec<String>) -> Vec<Vec<String>> {
 fn phrases(xs: Vec<String>) -> Vec<Vec<String>> {
     prefixes(xs)
         .iter()
-        .map(|x| suffixes(x.to_vec()))
-        .flatten()
+        .flat_map(|x| suffixes(x.to_vec()))
         .collect()
 }
 
@@ -62,11 +61,11 @@ fn split_sentence(sentence: String) -> Vec<String> {
         .collect()
 }
 
-pub fn corpus_to_set(corpus: &String, max_length: usize, codec: &Codec) -> IntSet<u64> {
+pub fn corpus_to_set(corpus: &str, max_length: usize, codec: &Codec) -> IntSet<u64> {
     let mut s = IntSet::default();
     s.reserve(1000000);
 
-    for sentence in split_corpus(&corpus) {
+    for sentence in split_corpus(corpus) {
         let sentence_vec = split_sentence(sentence);
         let phrases = phrases(sentence_vec);
         for phrase in phrases {
@@ -82,7 +81,7 @@ pub fn corpus_to_set(corpus: &String, max_length: usize, codec: &Codec) -> IntSe
     s
 }
 
-fn split_corpus(x: &String) -> Vec<String> {
+fn split_corpus(x: &str) -> Vec<String> {
     x.split_terminator(&['.', '!', '?', ';'])
         .filter(|x| !x.is_empty())
         .map(|x| x.trim())

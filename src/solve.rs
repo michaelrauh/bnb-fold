@@ -63,7 +63,7 @@ pub fn solve_for_dims(dims: Vec<usize>) {
             println!("touched tree size: {}", touched);
             println!("working on layer: {}", overlap);
             println!("example: {:?}", example);
-            println!("");
+            println!();
 
             previous_example = example;
         }
@@ -97,7 +97,7 @@ pub fn solve_for_dims(dims: Vec<usize>) {
             .collect();
 
         let working_words: Vec<&&u32> = vocab
-            .par_iter()
+            .iter()
             .filter(|v| !forbidden_words.contains(v))
             .filter(|v| {
                 for ip in impacted_phrases {

@@ -18,3 +18,11 @@ criterion = { version = "0.4", features = ["html_reports"] }
 [[bench]]
 name = "my_benchmark"
 harness = false
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"

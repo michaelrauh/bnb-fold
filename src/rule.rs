@@ -2,27 +2,27 @@ use std::{cmp::Ordering, collections::HashMap};
 
 use itertools::Itertools;
 
-pub fn make_blank(dims: &Vec<usize>) -> Vec<Option<u32>> {
-    let size = dims.iter().fold(1, |acc, cur| acc * cur);
+pub fn make_blank(dims: &[usize]) -> Vec<Option<u32>> {
+    let size = dims.iter().product();
     let mut vec = Vec::with_capacity(size);
     vec.resize(size, None);
     vec
 }
 
-pub fn full(answer: &Vec<Option<u32>>) -> bool {
+pub fn full(answer: &[Option<u32>]) -> bool {
     answer.iter().all(|x| x.is_some())
 }
 
-fn indices_in_order(dims: &Vec<usize>) -> Vec<Vec<usize>> {
+fn indices_in_order(dims: &[usize]) -> Vec<Vec<usize>> {
     order_by_distance(index_array(dims))
 }
 
-fn index_to_location_mapping(dims: &Vec<usize>) -> HashMap<usize, Vec<usize>> {
-    indices_in_order(&dims).into_iter().enumerate().collect()
+fn index_to_location_mapping(dims: &[usize]) -> HashMap<usize, Vec<usize>> {
+    indices_in_order(dims).into_iter().enumerate().collect()
 }
 
-fn location_to_index_mapping(dims: &Vec<usize>) -> HashMap<Vec<usize>, usize> {
-    indices_in_order(&dims)
+fn location_to_index_mapping(dims: &[usize]) -> HashMap<Vec<usize>, usize> {
+    indices_in_order(dims)
         .into_iter()
         .enumerate()
         .map(|(x, y)| (y, x))
@@ -54,25 +54,25 @@ fn impacted_locations(
     res
 }
 
-pub fn get_impacted_phrase_locations(dims: &Vec<usize>) -> Vec<Vec<Vec<usize>>> {
-    let location_to_index = location_to_index_mapping(&dims);
-    let index_to_location = index_to_location_mapping(&dims);
-    let blank = make_blank(&dims);
+pub fn get_impacted_phrase_locations(dims: &[usize]) -> Vec<Vec<Vec<usize>>> {
+    let location_to_index = location_to_index_mapping(dims);
+    let index_to_location = index_to_location_mapping(dims);
+    let blank = make_blank(dims);
 
     (0..blank.len())
         .map(|location| impacted_locations(location, &index_to_location, &location_to_index))
         .collect()
 }
 
-pub fn next_open_position(answer: &Vec<Option<u32>>) -> usize {
+pub fn next_open_position(answer: &[Option<u32>]) -> usize {
     answer.iter().position(|x| x.is_none()).unwrap()
 }
 
-pub fn get_diagonals(dims: &Vec<usize>) -> Vec<Vec<usize>> {
-    let location_to_index = location_to_index_mapping(&dims);
-    let index_to_location = index_to_location_mapping(&dims);
-    let blank = make_blank(&dims);
-    let indices = indices_in_order(&dims);
+pub fn get_diagonals(dims: &[usize]) -> Vec<Vec<usize>> {
+    let location_to_index = location_to_index_mapping(dims);
+    let index_to_location = index_to_location_mapping(dims);
+    let blank = make_blank(dims);
+    let indices = indices_in_order(dims);
 
     (0..blank.len())
         .map(|location| {
@@ -81,7 +81,7 @@ pub fn get_diagonals(dims: &Vec<usize>) -> Vec<Vec<usize>> {
             indices
                 .iter()
                 .filter(|index| {
-                    index.to_owned() < current_index
+                    *index < current_index
                         && index.iter().sum::<usize>() == current_distance
                 })
                 .map(|x| location_to_index[x])
@@ -90,8 +90,8 @@ pub fn get_diagonals(dims: &Vec<usize>) -> Vec<Vec<usize>> {
         .collect_vec()
 }
 
-fn index_array(dims: &Vec<usize>) -> Vec<Vec<usize>> {
-    cartesian_product(dims.into_iter().map(|x| (0..*x).collect()).collect())
+fn index_array(dims: &[usize]) -> Vec<Vec<usize>> {
+    cartesian_product(dims.iter().map(|x| (0..*x).collect()).collect())
 }
 
 fn order_by_distance(indices: Vec<Vec<usize>>) -> Vec<Vec<usize>> {
