@@ -1,6 +1,8 @@
 use std::{collections::HashSet, fs::read_to_string, hash::Hasher, iter::zip};
+use tinyset::Set64;
 
 use itertools::Itertools;
+use phf::PhfHash;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 use rustc_hash::FxHasher;
 
@@ -37,7 +39,7 @@ pub fn solve_for_dims(dims: Vec<usize>) {
     let mut previous_example = vec![];
 
     loop {
-        if i % 1000 == 0 {
+        if i % 10000 == 0 {
             let first_at_default = stack
                 .iter()
                 .position(|x| next_open_position(x) > 1)
@@ -90,15 +92,13 @@ pub fn solve_for_dims(dims: Vec<usize>) {
         }
         let impacted_phrases = &impacted_phrase_locations[next_index];
         let impacted_diagonal = &impacted_diagonals[next_index];
-        let forbidden_words: HashSet<u32> = impacted_diagonal
+        let forbidden_words:Set64<u32> = impacted_diagonal
             .iter()
-            .map(|idx| current_answer[*idx].as_ref().unwrap())
-            .cloned()
-            .collect();
+            .map(|idx| current_answer[*idx].as_ref().unwrap()).copied().collect();
 
-        let working_words: Vec<&&u32> = vocab
-            .iter()
-            .filter(|v| !forbidden_words.contains(v))
+        let to_add: Vec<Vec<Option<u32>>> = vocab
+            .par_iter()
+            .filter(|v| !forbidden_words.contains(***v))
             .filter(|v| {
                 for ip in impacted_phrases {
                     let mut h = FxHasher::default();
@@ -113,12 +113,14 @@ pub fn solve_for_dims(dims: Vec<usize>) {
                     }
                 }
                 true
-            })
-            .collect();
-        for new_word in working_words {
-            let mut res = current_answer.clone();
-            res[next_index] = Some(**new_word);
-            stack.push(res);
-        }
+            }).map(|new_word| { 
+                let mut res = current_answer.clone();
+                res[next_index] = Some(**new_word);
+                res
+            }).collect();
+
+            for res in to_add {
+                stack.push(res);
+            }
     }
 }

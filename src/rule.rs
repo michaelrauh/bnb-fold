@@ -150,6 +150,8 @@ fn cartesian_product<T: Clone>(lists: Vec<Vec<T>>) -> Vec<Vec<T>> {
 
 #[cfg(test)]
 mod tests {
+    use phf::PhfHash;
+
     use crate::rule::{
         get_diagonals, get_impacted_phrase_locations, indices_in_order, order_by_distance,
     };
@@ -217,21 +219,15 @@ mod tests {
 
     #[test]
     fn temp() {
-        assert_eq!(
-            indices_in_order(&vec![4, 3]),
-            vec![
-                vec![0, 0],
-                vec![0, 1],
-                vec![1, 0],
-                vec![0, 2],
-                vec![1, 1],
-                vec![2, 0],
-                vec![1, 2],
-                vec![2, 1],
-                vec![2, 2]
-            ]
-        );
+        use bitvector::*;
+        let mut bv = BitVector::new(30000 * 30000 * 30000);
+        bv.insert(10);
+        assert!(bv.contains(10));
+        assert!(!bv.contains(1));
+
     }
+
+    
 
     #[test]
     fn it_gets_impacted_phrase_locations() {
