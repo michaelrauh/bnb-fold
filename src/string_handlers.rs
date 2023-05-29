@@ -1,6 +1,6 @@
 use itertools::Itertools;
 use nohash_hasher::IntSet;
-use rustc_hash::FxHasher;
+
 use std::{collections::HashMap, hash::Hasher};
 
 fn suffixes(xs: Vec<String>) -> Vec<Vec<String>> {
@@ -70,7 +70,7 @@ pub fn corpus_to_set(corpus: &str, max_length: usize, codec: &Codec) -> IntSet<u
         let phrases = phrases(sentence_vec);
         for phrase in phrases {
             if phrase.len() <= max_length {
-                let mut h = FxHasher::default();
+                let mut h = ahash::AHasher::default();
                 for word in phrase {
                     h.write_u32(codec.coder[&word]);
                 }
@@ -103,8 +103,6 @@ fn split_corpus(x: &str) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use std::vec;
-
-    use rustc_hash::FxHashSet;
 
     use crate::string_handlers::{phrases, prefixes, split_corpus, split_sentence};
 
@@ -206,26 +204,6 @@ mod tests {
         );
     }
 
-    #[test]
-    fn it_converts_a_corpus_to_a_set_of_phrases() {
-        let mut expected_set = FxHashSet::default();
-        expected_set.insert(vec!["a".to_string()]);
-        expected_set.insert(vec!["a".to_string(), "b".to_string()]);
-        expected_set.insert(vec!["b".to_string()]);
-        expected_set.insert(vec!["a".to_string(), "b".to_string(), "c".to_string()]);
-        expected_set.insert(vec!["b".to_string(), "c".to_string()]);
-        expected_set.insert(vec!["c".to_string()]);
-        expected_set.insert(vec![
-            "a".to_string(),
-            "b".to_string(),
-            "c".to_string(),
-            "d".to_string(),
-        ]);
-        expected_set.insert(vec!["b".to_string(), "c".to_string(), "d".to_string()]);
-        expected_set.insert(vec!["c".to_string(), "d".to_string()]);
-        expected_set.insert(vec!["d".to_string()]);
-        // assert_eq!(corpus_to_set(&"a b c d".to_string(), 100), expected_set);
-    }
 
     // #[test]
     // fn it_creates_a_vocabulary_from_a_corpus() {

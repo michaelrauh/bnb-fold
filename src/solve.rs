@@ -1,10 +1,10 @@
-use std::{collections::HashSet, fs::read_to_string, hash::Hasher, iter::zip};
+use std::{collections::HashSet, fs::read_to_string, hash::Hasher, iter::zip, sync::Mutex};
 use tinyset::Set64;
 
 use itertools::Itertools;
 use phf::PhfHash;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
-use rustc_hash::FxHasher;
+
 
 use crate::{
     rule::{full, get_diagonals, get_impacted_phrase_locations, make_blank, next_open_position},
@@ -31,7 +31,7 @@ pub fn solve_for_dims(dims: Vec<usize>) {
     let vocab: Vec<&u32> = codec.coder.values().sorted().collect();
     let phrases = string_handlers::corpus_to_set(&corpus, max_length, &codec);
     let initial = make_blank(&dims);
-    let mut stack = vec![initial];
+    let mut stack = Mutex::new(vec![initial]);
     let impacted_phrase_locations = get_impacted_phrase_locations(&dims);
     let impacted_diagonals = get_diagonals(&dims);
     let mut i = 0;
@@ -39,14 +39,14 @@ pub fn solve_for_dims(dims: Vec<usize>) {
     let mut previous_example = vec![];
 
     loop {
-        if i % 10000 == 0 {
-            let first_at_default = stack
+        if i % 1000 == 0 {
+            let first_at_default = stack.get_mut().unwrap()
                 .iter()
                 .position(|x| next_open_position(x) > 1)
                 .unwrap_or_default();
-            let touched = stack.len() - first_at_default;
+            let touched = stack.get_mut().unwrap().len() - first_at_default;
             let percent = (first_at_default as f32) / (vocab.len() as f32);
-            let example = decode(stack.last().unwrap(), &codec);
+            let example = decode(stack.get_mut().unwrap().last().unwrap(), &codec);
 
             let mut overlap = 0;
             for (cur, prev) in zip(&example, &previous_example) {
@@ -72,7 +72,7 @@ pub fn solve_for_dims(dims: Vec<usize>) {
 
         i += 1;
 
-        let cur = stack.pop();
+        let cur = stack.get_mut().unwrap().pop();
         if cur.is_none() {
             println!("no results");
             break;
@@ -96,12 +96,12 @@ pub fn solve_for_dims(dims: Vec<usize>) {
             .iter()
             .map(|idx| current_answer[*idx].as_ref().unwrap()).copied().collect();
 
-        let to_add: Vec<Vec<Option<u32>>> = vocab
+        vocab
             .par_iter()
             .filter(|v| !forbidden_words.contains(***v))
             .filter(|v| {
                 for ip in impacted_phrases {
-                    let mut h = FxHasher::default();
+                    let mut h = ahash::AHasher::default();
                     for word in ip {
                         let thing = current_answer[*word].as_ref().unwrap();
                         h.write_u32(*thing);
@@ -117,10 +117,8 @@ pub fn solve_for_dims(dims: Vec<usize>) {
                 let mut res = current_answer.clone();
                 res[next_index] = Some(**new_word);
                 res
-            }).collect();
-
-            for res in to_add {
-                stack.push(res);
-            }
+            }).for_each(|res| {
+                stack.lock().unwrap().push(res);
+            })
     }
 }

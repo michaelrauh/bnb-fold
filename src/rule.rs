@@ -218,18 +218,6 @@ mod tests {
     }
 
     #[test]
-    fn temp() {
-        use bitvector::*;
-        let mut bv = BitVector::new(30000 * 30000 * 30000);
-        bv.insert(10);
-        assert!(bv.contains(10));
-        assert!(!bv.contains(1));
-
-    }
-
-    
-
-    #[test]
     fn it_gets_impacted_phrase_locations() {
         assert_eq!(
             get_impacted_phrase_locations(&vec![2, 2]),
