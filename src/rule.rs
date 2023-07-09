@@ -2,14 +2,14 @@ use std::{cmp::Ordering, collections::HashMap};
 
 use itertools::Itertools;
 
-pub fn make_blank(dims: &[usize]) -> Vec<Option<u32>> {
+pub fn make_blank(dims: &[usize]) -> Vec<Option<usize>> {
     let size = dims.iter().product();
     let mut vec = Vec::with_capacity(size);
     vec.resize(size, None);
     vec
 }
 
-pub fn full(answer: &[Option<u32>]) -> bool {
+pub fn full(answer: &[Option<usize>]) -> bool {
     answer.iter().all(|x| x.is_some())
 }
 
@@ -64,7 +64,7 @@ pub fn get_impacted_phrase_locations(dims: &[usize]) -> Vec<Vec<Vec<usize>>> {
         .collect()
 }
 
-pub fn next_open_position(answer: &[Option<u32>]) -> usize {
+pub fn next_open_position(answer: &[Option<usize>]) -> usize {
     answer.iter().position(|x| x.is_none()).unwrap()
 }
 

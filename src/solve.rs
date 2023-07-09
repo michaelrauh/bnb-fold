@@ -11,7 +11,7 @@ use crate::{
     string_handlers::{self, Codec},
 };
 
-fn decode(coded: &Vec<Option<u32>>, codec: &Codec) -> Vec<String> {
+fn decode(coded: &Vec<Option<usize>>, codec: &Codec) -> Vec<String> {
     let mut res = vec![];
     for word in coded {
         if word.is_some() {
@@ -28,7 +28,7 @@ pub fn solve_for_dims(dims: Vec<usize>) {
     let corpus = read_to_string("example.txt").unwrap();
     // let corpus = "a b. c d. a c. b d.".to_string();
     let codec = string_handlers::make_codec(&corpus);
-    let vocab: Vec<&u32> = codec.coder.values().sorted().collect();
+    let vocab: Vec<&usize> = codec.coder.values().sorted().collect();
     let phrases = string_handlers::corpus_to_set(&corpus, max_length, &codec);
     let initial = make_blank(&dims);
     let mut stack = Mutex::new(vec![initial]);
@@ -92,7 +92,7 @@ pub fn solve_for_dims(dims: Vec<usize>) {
         }
         let impacted_phrases = &impacted_phrase_locations[next_index];
         let impacted_diagonal = &impacted_diagonals[next_index];
-        let forbidden_words:Set64<u32> = impacted_diagonal
+        let forbidden_words:Set64<usize> = impacted_diagonal
             .iter()
             .map(|idx| current_answer[*idx].as_ref().unwrap()).copied().collect();
 
@@ -101,14 +101,13 @@ pub fn solve_for_dims(dims: Vec<usize>) {
             .filter(|v| !forbidden_words.contains(***v))
             .filter(|v| {
                 for ip in impacted_phrases {
-                    let mut h = ahash::AHasher::default();
+                    let mut h = phrases.produce_empty_hash();
                     for word in ip {
                         let thing = current_answer[*word].as_ref().unwrap();
-                        h.write_u32(*thing);
+                        h.hash_in(*thing);
                     }
-                    h.write_u32(***v);
-                    let f = h.finish();
-                    if !phrases.contains(&f) {
+                    h.hash_in(***v);
+                    if !phrases.contains(h) {
                         return false;
                     }
                 }

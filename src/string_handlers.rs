@@ -3,6 +3,8 @@ use nohash_hasher::IntSet;
 
 use std::{collections::HashMap, hash::Hasher};
 
+use crate::phrase_set::PhraseSet;
+
 fn suffixes(xs: Vec<String>) -> Vec<Vec<String>> {
     let mut acc = vec![];
     for i in 0..xs.len() {
@@ -13,8 +15,8 @@ fn suffixes(xs: Vec<String>) -> Vec<Vec<String>> {
 }
 
 pub struct Codec {
-    pub coder: HashMap<String, u32>,
-    pub decoder: HashMap<u32, String>,
+    pub coder: HashMap<String, usize>,
+    pub decoder: HashMap<usize, String>,
 }
 
 pub fn make_codec(corpus: &str) -> Codec {
@@ -23,10 +25,10 @@ pub fn make_codec(corpus: &str) -> Codec {
         .flat_map(split_sentence)
         .unique()
         .collect();
-    let coder: HashMap<String, u32> = vocab
+    let coder: HashMap<String, usize> = vocab
         .iter()
         .enumerate()
-        .map(|(id, word)| (word.to_string(), id as u32))
+        .map(|(id, word)| (word.to_string(), id))
         .collect();
     let decoder = coder
         .iter()
@@ -61,23 +63,20 @@ fn split_sentence(sentence: String) -> Vec<String> {
         .collect()
 }
 
-pub fn corpus_to_set(corpus: &str, max_length: usize, codec: &Codec) -> IntSet<u64> {
-    let mut s = IntSet::default();
-    s.reserve(1000000);
-
+pub fn corpus_to_set(corpus: &str, max_length: usize, codec: &Codec) -> PhraseSet {
+    let mut s = PhraseSet::new(codec.coder.len(), max_length);
+    let mut c = 0;
     for sentence in split_corpus(corpus) {
         let sentence_vec = split_sentence(sentence);
         let phrases = phrases(sentence_vec);
         for phrase in phrases {
             if phrase.len() <= max_length {
-                let mut h = ahash::AHasher::default();
-                for word in phrase {
-                    h.write_u32(codec.coder[&word]);
-                }
-                s.insert(h.finish());
+                s.insert(phrase.iter().map(|x| codec.coder[x]).collect_vec());
+                c += 1;
             }
         }
     }
+    println!("set contains this many items: {}", c);
     s
 }
 

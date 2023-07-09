@@ -1,41 +1,41 @@
 
-struct PhraseSet {
+pub struct PhraseSet {
     base: Vec<bool>,
     offset: usize
  
 }
 
-struct PhraseHash {
+pub struct PhraseHash {
     h: usize,
-    offset: usize,
-    depth: usize
+    offset: usize
 }
 impl PhraseHash {
     fn new(offset: usize) -> Self {
-        PhraseHash { h: 0, offset, depth: 0 }
+        PhraseHash { h: 0, offset }
     }
 
-    fn hash_in(&mut self, arg: usize) {
-        self.h = (self.h * (self.offset * self.depth)) + arg;
-        self.depth += 1;
+    pub fn hash_in(&mut self, arg: usize) {
+        self.h = (self.h * self.offset) + arg;
     }
 
-    fn finish(&self) -> usize {
+    pub fn finish(&self) -> usize {
         self.h
     }
 }
 
 impl PhraseSet {
-    fn new(vocab_size: usize, max_phrase_length: usize) -> Self {
+    pub fn new(vocab_size: usize, max_phrase_length: usize) -> Self {
         let mut h = PhraseHash::new(vocab_size);
         for _ in 0..max_phrase_length {
             h.hash_in(vocab_size);
         }
-
-        PhraseSet {base: vec![false; h.finish()], offset:vocab_size}
+        let total = h.finish();
+        println!("offset is: {}", vocab_size);
+        println!("size is: {}", total);
+        PhraseSet {base: vec![false; total], offset:vocab_size}
     }
 
-    fn insert(&mut self, phrase: Vec<usize>) {
+    pub fn insert(&mut self, phrase: Vec<usize>) {
         let mut h = PhraseHash::new(self.offset);
         for cur in phrase {
             h.hash_in(cur);
@@ -43,11 +43,15 @@ impl PhraseSet {
         self.base[h.finish()] = true;
     }
 
-    fn contains(&self, h: PhraseHash) -> bool {
+    pub fn contains(&self, h: PhraseHash) -> bool {
         self.base[h.finish()]
     }
 
-    fn produce_empty_hash(&self) -> PhraseHash {
+    pub fn len(&self) -> usize {
+        self.base.len()
+    }
+
+    pub fn produce_empty_hash(&self) -> PhraseHash {
         PhraseHash::new(self.offset)
     }
 }
@@ -100,6 +104,27 @@ fn it_hashes_shifts_first_by_range_then_adds_second() {
     h_3.hash_in(2);
 
     assert_eq!(h_3.finish(), 38);
+
+    let mut h_4 = PhraseHash::new(100);
+    h_4.hash_in(1);
+    h_4.hash_in(1);
+    h_4.hash_in(1);
+
+    assert_eq!(h_4.finish(), 10101);
+
+    let mut h_5 = PhraseHash::new(10);
+    h_5.hash_in(2);
+    h_5.hash_in(3);
+    h_5.hash_in(4);
+
+    assert_eq!(h_5.finish(), 234);
+
+    let mut h_6 = PhraseHash::new(100);
+    h_6.hash_in(99);
+    h_6.hash_in(99);
+    h_6.hash_in(99);
+
+    assert_eq!(h_6.finish(), 999999);
 }
 
 #[test]
