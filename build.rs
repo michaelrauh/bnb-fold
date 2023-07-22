@@ -119,21 +119,12 @@ fn main() {
     let vocab: Vec<&u32> = codec.coder.values().sorted().collect();
     let phrases = corpus_to_set(&corpus, max_length, &codec);
 
+    
     let mut s = phf_codegen::Set::new();
     let mut v = phf_codegen::Set::new();
-    
     let mut dc = phf_codegen::Map::new();
-    codec.decoder.into_iter().for_each(|(k, v)| {
-        dc.entry(k, &format!("\"{}\"", &v));
-    });
-
-    write!(
-        &mut file,
-        "static DECODER: phf::Map<u32, &str> = {}",
-        dc.build()
-    )
-    .unwrap();
-    write!(&mut file, ";\n").unwrap();
+    
+    
 
     phrases.into_iter().for_each(|p|
     {
@@ -144,6 +135,10 @@ fn main() {
         {
             v.entry(word.to_owned());
         });
+
+    codec.decoder.into_iter().for_each(|(k, v)| {
+        dc.entry(k, &format!("\"{}\"", &v));
+    });
 
     write!(
         &mut file,
@@ -157,6 +152,14 @@ fn main() {
         &mut file,
         "static VOCAB: phf::Set<u32> = {}",
         v.build()
+    )
+    .unwrap();
+    write!(&mut file, ";\n").unwrap();
+
+    write!(
+        &mut file,
+        "static DECODER: phf::Map<u32, &str> = {}",
+        dc.build()
     )
     .unwrap();
     write!(&mut file, ";\n").unwrap();

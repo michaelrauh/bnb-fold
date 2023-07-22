@@ -8,5 +8,6 @@ pub fn main() {
 
     dbg!(PHRASES.contains(&500));
     dbg!(VOCAB.contains(&1));
-    dbg!(&DECODER);
+    dbg!(&DECODER.keys());
+    dbg!(&VOCAB.iter());
 }
