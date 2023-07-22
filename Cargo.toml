@@ -6,6 +6,9 @@ edition = "2021"
 [build-dependencies]
 phf = { version = "0.11.1", default-features = false }
 phf_codegen = "0.11.1"
+itertools = "0.10.5"
+ahash = "0.8.3"
+nohash-hasher = "0.2.0"
 
 [dependencies]
 ahash = "0.8.3"
@@ -16,19 +19,3 @@ phf = "0.11.1"
 rayon = "1.7.0"
 string-interner = "0.14.0"
 tinyset = "0.4.15"
-
-[dev-dependencies]
-criterion = { version = "0.4", features = ["html_reports"] }
-
-[[bench]]
-name = "my_benchmark"
-harness = false
-lto = true
-codegen-units = 1
-panic = "abort"
-
-[profile.release]
-lto = true
-codegen-units = 1
-panic = "abort"
-
