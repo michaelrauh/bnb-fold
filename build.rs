@@ -9,9 +9,9 @@ fn main() {
 
     write!(
         &mut file,
-        "static KEYWORDS: phf::Map<&'static str, &'static str> = {}",
-        phf_codegen::Map::new()
-            .entry("loop", "\"Loop\"")
+        "static KEYWORDS: phf::Set<&'static str> = {}",
+        phf_codegen::Set::new()
+            .entry("loop")
             .build()
     )
     .unwrap();
