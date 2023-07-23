@@ -110,7 +110,7 @@ fn main() {
     let path = Path::new(&env::var("OUT_DIR").unwrap()).join("codegen.rs");
     let mut file = BufWriter::new(File::create(&path).unwrap());
 
-    let dims = vec![4,4];
+    let dims = vec![2,2];
 
     let max_length = *dims.iter().max().unwrap();
     let corpus = read_to_string("example.txt").unwrap();
