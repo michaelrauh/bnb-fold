@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use nohash_hasher::IntSet;
 
-use std::{collections::HashMap, hash::Hasher};
+use std::{collections::{HashMap, hash_map::DefaultHasher}, hash::Hasher};
 
 fn suffixes(xs: Vec<String>) -> Vec<Vec<String>> {
     let mut acc = vec![];
@@ -61,24 +61,43 @@ fn split_sentence(sentence: String) -> Vec<String> {
         .collect()
 }
 
-pub fn corpus_to_set(corpus: &str, max_length: usize, codec: &Codec) -> IntSet<u64> {
-    let mut s = IntSet::default();
-    s.reserve(1000000);
+pub struct PhraseHash {
+    h: u64,
+    offset: u64
+}
+impl PhraseHash {
+    fn new(offset: u64) -> Self {
+        PhraseHash { h: 0, offset }
+    }
+
+    pub fn hash_in(&mut self, arg: u32) {
+        self.h = (self.h * self.offset) + (arg as u64);
+    }
+
+    pub fn finish(&self) -> u64 {
+        self.h
+    }
+}
+
+pub fn corpus_to_set(corpus: &str, max_length: usize, codec: &Codec, length: usize) -> Vec<u64> {
+    let mut s = vec![];
 
     for sentence in split_corpus(corpus) {
         let sentence_vec = split_sentence(sentence);
         let phrases = phrases(sentence_vec);
         for phrase in phrases {
             if phrase.len() <= max_length {
-                let mut h = ahash::AHasher::default();
+                let mut h = PhraseHash::new(length as u64);
                 for word in phrase {
-                    h.write_u32(codec.coder[&word]);
+                    h.hash_in(codec.coder[&word]);
                 }
-                s.insert(h.finish());
+                let to_add = h.finish();
+                println!("{}", to_add);
+                s.push(to_add);
             }
         }
     }
-    s
+    s.into_iter().unique().collect_vec()
 }
 
 fn split_corpus(x: &str) -> Vec<String> {

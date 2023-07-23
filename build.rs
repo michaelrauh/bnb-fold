@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::collections::hash_map::DefaultHasher;
 use std::env;
 use std::fs::{File, read_to_string};
 use std::hash::Hasher;
@@ -86,41 +87,60 @@ fn phrases(xs: Vec<String>) -> Vec<Vec<String>> {
         .collect()
 }
 
-pub fn corpus_to_set(corpus: &str, max_length: usize, codec: &Codec) -> IntSet<u64> {
-    let mut s = IntSet::default();
-    s.reserve(1000000);
+pub struct PhraseHash {
+    h: u64,
+    offset: u64
+}
+impl PhraseHash {
+    fn new(offset: u64) -> Self {
+        PhraseHash { h: 0, offset }
+    }
+
+    pub fn hash_in(&mut self, arg: u32) {
+        self.h = (self.h * self.offset) + (arg as u64);
+    }
+
+    pub fn finish(&self) -> u64 {
+        self.h
+    }
+}
+
+pub fn corpus_to_set(corpus: &str, max_length: usize, codec: &Codec, length: usize) -> Vec<u64> {
+    let mut s = vec![];
 
     for sentence in split_corpus(corpus) {
         let sentence_vec = split_sentence(sentence);
         let phrases = phrases(sentence_vec);
         for phrase in phrases {
             if phrase.len() <= max_length {
-                let mut h = ahash::AHasher::default();
+                let mut h = PhraseHash::new(length as u64);
                 for word in phrase {
-                    h.write_u32(codec.coder[&word]);
+                    h.hash_in(codec.coder[&word]);
                 }
-                s.insert(h.finish());
+                let to_add = h.finish();
+                println!("{}", to_add);
+                s.push(to_add);
             }
         }
     }
-    s
+    s.into_iter().unique().collect_vec()
 }
 
 fn main() {
     let path = Path::new(&env::var("OUT_DIR").unwrap()).join("codegen.rs");
     let mut file = BufWriter::new(File::create(&path).unwrap());
 
-    let dims = vec![2,2];
+    let dims = vec![4,4];
 
     let max_length = *dims.iter().max().unwrap();
     let corpus = read_to_string("example.txt").unwrap();
 
     let codec = make_codec(&corpus);
     let vocab: Vec<&u32> = codec.coder.values().sorted().collect();
-    let phrases = corpus_to_set(&corpus, max_length, &codec);
+    let phrases = corpus_to_set(&corpus, max_length, &codec, vocab.len());
 
     
-    let mut s = phf_codegen::Set::new();
+    let mut static_phrases = phf_codegen::Set::new();
     let mut v = phf_codegen::Set::new();
     let mut dc = phf_codegen::Map::new();
     
@@ -134,7 +154,7 @@ fn main() {
 
     phrases.into_iter().for_each(|p|
     {
-        s.entry(p);
+        static_phrases.entry(p);
     });
 
     vocab.into_iter().for_each(|word|
@@ -149,7 +169,7 @@ fn main() {
     write!(
         &mut file,
         "static PHRASES: phf::Set<u64> = {}",
-        s.build()
+        static_phrases.build()
     )
     .unwrap();
     write!(&mut file, ";\n").unwrap();

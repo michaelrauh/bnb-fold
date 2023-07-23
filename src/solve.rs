@@ -25,6 +25,24 @@ fn decode(coded: &Vec<Option<u32>>) -> Vec<String> {
     res
 }
 
+pub struct PhraseHash {
+    h: u64,
+    offset: u64
+}
+impl PhraseHash {
+    fn new(offset: u64) -> Self {
+        PhraseHash { h: 0, offset }
+    }
+
+    pub fn hash_in(&mut self, arg: u32) {
+        self.h = (self.h * self.offset) + (arg as u64);
+    }
+
+    pub fn finish(&self) -> u64 {
+        self.h
+    }
+}
+
 pub fn solve_for_dims() {
 
     let dims = DIMS.into_iter().next().unwrap().split(",").map(|y| {str::parse(y).unwrap()}).collect_vec();
@@ -34,7 +52,9 @@ pub fn solve_for_dims() {
     let corpus = read_to_string("example.txt").unwrap();
     let codec = string_handlers::make_codec(&corpus);
 
-    let phrases = string_handlers::corpus_to_set(&corpus, max_length, &codec);
+    // let phrases = string_handlers::corpus_to_set(&corpus, max_length, &codec, vocab.len());
+    let phrases = &PHRASES;
+
     let initial = make_blank(&dims);
     let mut stack = Mutex::new(vec![initial]);
     let impacted_phrase_locations = get_impacted_phrase_locations(&dims);
@@ -106,12 +126,12 @@ pub fn solve_for_dims() {
             .filter(|v| !forbidden_words.contains(***v))
             .filter(|v| {
                 for ip in impacted_phrases {
-                    let mut h = ahash::AHasher::default();
+                    let mut h = PhraseHash::new(vocab.len() as u64);
                     for word in ip {
                         let thing = current_answer[*word].as_ref().unwrap();
-                        h.write_u32(*thing);
+                        h.hash_in(*thing);
                     }
-                    h.write_u32(***v);
+                    h.hash_in(***v);
                     let f = h.finish();
                     if !phrases.contains(&f) {
                         return false;
