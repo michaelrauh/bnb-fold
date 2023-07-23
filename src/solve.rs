@@ -10,14 +10,14 @@ include!(concat!(env!("OUT_DIR"), "/codegen.rs"));
 
 use crate::{
     rule::{full, get_diagonals, get_impacted_phrase_locations, make_blank, next_open_position},
-    string_handlers::{self, Codec},
+    string_handlers::{self},
 };
 
-fn decode(coded: &Vec<Option<u32>>, codec: &Codec) -> Vec<String> {
+fn decode(coded: &Vec<Option<u32>>) -> Vec<String> {
     let mut res = vec![];
     for word in coded {
         if word.is_some() {
-            res.push(codec.decoder[&word.unwrap()].clone())
+            res.push(DECODER[&word.unwrap()].clone().to_string())
         } else {
             break;
         }
@@ -28,12 +28,12 @@ fn decode(coded: &Vec<Option<u32>>, codec: &Codec) -> Vec<String> {
 pub fn solve_for_dims() {
 
     let dims = DIMS.into_iter().next().unwrap().split(",").map(|y| {str::parse(y).unwrap()}).collect_vec();
+    let vocab = VOCAB.into_iter().collect_vec();
 
     let max_length = *dims.iter().max().unwrap();
     let corpus = read_to_string("example.txt").unwrap();
-    // let corpus = "a b. c d. a c. b d.".to_string();
     let codec = string_handlers::make_codec(&corpus);
-    let vocab: Vec<&u32> = codec.coder.values().sorted().collect();
+
     let phrases = string_handlers::corpus_to_set(&corpus, max_length, &codec);
     let initial = make_blank(&dims);
     let mut stack = Mutex::new(vec![initial]);
@@ -51,7 +51,7 @@ pub fn solve_for_dims() {
                 .unwrap_or_default();
             let touched = stack.get_mut().unwrap().len() - first_at_default;
             let percent = (first_at_default as f32) / (vocab.len() as f32);
-            let example = decode(stack.get_mut().unwrap().last().unwrap(), &codec);
+            let example = decode(stack.get_mut().unwrap().last().unwrap());
 
             let mut overlap = 0;
             for (cur, prev) in zip(&example, &previous_example) {
@@ -86,7 +86,7 @@ pub fn solve_for_dims() {
 
         if full(&current_answer) {
             print!("found result:");
-            println!("{:?}", decode(&current_answer, &codec));
+            println!("{:?}", decode(&current_answer));
             break;
         }
 
