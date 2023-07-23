@@ -124,7 +124,13 @@ fn main() {
     let mut v = phf_codegen::Set::new();
     let mut dc = phf_codegen::Map::new();
     
-    
+    write!(
+        &mut file,
+        "static DIMS: phf::Set<&'static str> = {}",
+        phf_codegen::Set::new().entry(dims.into_iter().join(",")).build()
+    )
+    .unwrap();
+    write!(&mut file, ";\n").unwrap();
 
     phrases.into_iter().for_each(|p|
     {

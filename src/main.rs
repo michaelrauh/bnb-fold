@@ -10,4 +10,5 @@ pub fn main() {
     dbg!(VOCAB.contains(&1));
     dbg!(&DECODER.keys());
     dbg!(&VOCAB.iter());
+    dbg!(&DIMS.iter());
 }
