@@ -3,6 +3,8 @@ use nohash_hasher::IntSet;
 
 use std::{collections::HashMap, hash::Hasher};
 
+use crate::phrase_set::PhraseHash;
+
 fn suffixes(xs: Vec<String>) -> Vec<Vec<String>> {
     let mut acc = vec![];
     for i in 0..xs.len() {
@@ -61,7 +63,7 @@ fn split_sentence(sentence: String) -> Vec<String> {
         .collect()
 }
 
-pub fn corpus_to_set(corpus: &str, max_length: usize, codec: &Codec) -> IntSet<u64> {
+pub fn corpus_to_set(corpus: &str, max_length: usize, codec: &Codec, length: u64) -> IntSet<u64> {
     let mut s = IntSet::default();
     s.reserve(1000000);
 
@@ -70,9 +72,9 @@ pub fn corpus_to_set(corpus: &str, max_length: usize, codec: &Codec) -> IntSet<u
         let phrases = phrases(sentence_vec);
         for phrase in phrases {
             if phrase.len() <= max_length {
-                let mut h = ahash::AHasher::default();
+                let mut h = PhraseHash::new(length);
                 for word in phrase {
-                    h.write_u32(codec.coder[&word]);
+                    h.hash_in(codec.coder[&word] as u64);
                 }
                 s.insert(h.finish());
             }

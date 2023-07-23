@@ -8,7 +8,7 @@ use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
 use crate::{
     rule::{full, get_diagonals, get_impacted_phrase_locations, make_blank, next_open_position},
-    string_handlers::{self, Codec},
+    string_handlers::{self, Codec}, phrase_set::PhraseHash,
 };
 
 fn decode(coded: &Vec<Option<u32>>, codec: &Codec) -> Vec<String> {
@@ -29,7 +29,7 @@ pub fn solve_for_dims(dims: Vec<usize>) {
     // let corpus = "a b. c d. a c. b d.".to_string();
     let codec = string_handlers::make_codec(&corpus);
     let vocab: Vec<&u32> = codec.coder.values().sorted().collect();
-    let phrases = string_handlers::corpus_to_set(&corpus, max_length, &codec);
+    let phrases = string_handlers::corpus_to_set(&corpus, max_length, &codec, vocab.len() as u64);
     let initial = make_blank(&dims);
     let mut stack = Mutex::new(vec![initial]);
     let impacted_phrase_locations = get_impacted_phrase_locations(&dims);
@@ -101,12 +101,12 @@ pub fn solve_for_dims(dims: Vec<usize>) {
             .filter(|v| !forbidden_words.contains(***v))
             .filter(|v| {
                 for ip in impacted_phrases {
-                    let mut h = ahash::AHasher::default();
+                    let mut h = PhraseHash::new(vocab.len() as u64);
                     for word in ip {
                         let thing = current_answer[*word].as_ref().unwrap();
-                        h.write_u32(*thing);
+                        h.hash_in(*thing as u64);
                     }
-                    h.write_u32(***v);
+                    h.hash_in(***v as u64);
                     let f = h.finish();
                     if !phrases.contains(&f) {
                         return false;
