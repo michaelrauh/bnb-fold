@@ -4,6 +4,8 @@ use tinyset::Set64;
 use itertools::Itertools;
 use phf::PhfHash;
 use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
+include!(concat!(env!("OUT_DIR"), "/codegen.rs"));
+
 
 
 use crate::{
@@ -23,7 +25,10 @@ fn decode(coded: &Vec<Option<u32>>, codec: &Codec) -> Vec<String> {
     res
 }
 
-pub fn solve_for_dims(dims: Vec<usize>) {
+pub fn solve_for_dims() {
+
+    let dims = DIMS.into_iter().next().unwrap().split(",").map(|y| {str::parse(y).unwrap()}).collect_vec();
+
     let max_length = *dims.iter().max().unwrap();
     let corpus = read_to_string("example.txt").unwrap();
     // let corpus = "a b. c d. a c. b d.".to_string();
